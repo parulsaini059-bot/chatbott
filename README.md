@@ -7,7 +7,7 @@ NovaAI is a production-grade, general-purpose conversational AI web application 
 ## 🌟 Key Upgrades & Capabilities
 
 ### 1. Real Large Language Model (LLM) Engine
-- **Default Provider**: **Google Gemini (`gemini-1.5-flash`)** directly integrated via official REST API.
+- **Default Provider**: **Google Gemini (`gemini-3.5-flash`)** directly integrated via official `google-genai` SDK.
 - **Alternative Providers**: **OpenAI (`gpt-4o-mini`)** and **Groq Cloud (`llama-3.3-70b-versatile`)**.
 - **No Rule-Based Limitations**: Every single prompt is passed to the real LLM. No hardcoded responses, keyword matching, or restricted FAQ databases.
 - **Clear Error Messaging**: If an API key is missing or invalid, NovaAI displays a clear, actionable guide with links to get a key, rather than pretending to generate answers.
@@ -106,7 +106,7 @@ AI_PROVIDER=gemini
 # 1. Google Gemini API (Recommended)
 # Get your free key at: https://aistudio.google.com/app/apikey
 GEMINI_API_KEY=AIzaSy...
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-3.5-flash
 
 # 2. OpenAI API
 OPENAI_API_KEY=sk-proj-...
@@ -133,6 +133,24 @@ python app.py
 
 Open your browser and navigate to:
 👉 **[http://127.0.0.1:5000](http://127.0.0.1:5000)**
+
+---
+
+## 🚀 Deploy to Vercel
+
+NovaAI is pre-configured for zero-configuration serverless deployment on [Vercel](https://vercel.com/) via `vercel.json` and `api/index.py`.
+
+### 1-Click Deploy
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fparulsaini059-bot%2Fchatbott&env=GEMINI_API_KEY,SECRET_KEY,GEMINI_MODEL&envDescription=API%20keys%20and%20secrets%20for%20NovaAI&project-name=chatbott&repository-name=chatbott)
+
+### Manual Steps on Vercel Dashboard:
+1. Go to [vercel.com/new](https://vercel.com/new).
+2. Select your imported GitHub repository **`parulsaini059-bot/chatbott`**.
+3. Under **Environment Variables**, add:
+   - `GEMINI_API_KEY` = your Gemini API key
+   - `SECRET_KEY` = any random secure string
+   - `GEMINI_MODEL` = `gemini-3.5-flash`
+4. Click **Deploy**. Vercel will install dependencies from `requirements.txt` and launch your live URL!
 
 ---
 

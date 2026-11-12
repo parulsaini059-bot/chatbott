@@ -5,8 +5,12 @@ from dotenv import load_dotenv
 # Load environment variables before anything else
 load_dotenv()
 
+from pathlib import Path
 from flask import Flask, render_template, jsonify
 from flask_login import LoginManager
+
+BASE_DIR = Path(__file__).resolve().parent
+
 from config import Config
 from models import db, User
 from routes.auth import auth_bp
@@ -23,7 +27,12 @@ logger = logging.getLogger(__name__)
 
 def create_app(config_class=Config):
     """Application factory for NovaAI Chatbot."""
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        template_folder=str(BASE_DIR / 'templates'),
+        static_folder=str(BASE_DIR / 'static'),
+        static_url_path='/static'
+    )
     app.config.from_object(config_class)
 
     # Initialize Database

@@ -28,6 +28,8 @@ class Config:
     # Check for direct database URL first
     env_db_url = os.getenv('DATABASE_URL')
     if env_db_url:
+        if env_db_url.startswith('postgres://'):
+            env_db_url = env_db_url.replace('postgres://', 'postgresql://', 1)
         SQLALCHEMY_DATABASE_URI = env_db_url
     elif DATABASE_TYPE == 'mysql':
         mysql_user = os.getenv('MYSQL_USER', 'root')
@@ -39,8 +41,11 @@ class Config:
             f"mysql+pymysql://{mysql_user}:{mysql_pass}@{mysql_host}:{mysql_port}/{mysql_db}"
         )
     else:
-        # Default SQLite database
-        db_path = BASE_DIR / 'chatbot.db'
+        # Default SQLite database - fallback to /tmp in serverless environments (Vercel)
+        if os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME'):
+            db_path = Path('/tmp') / 'chatbot.db'
+        else:
+            db_path = BASE_DIR / 'chatbot.db'
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False

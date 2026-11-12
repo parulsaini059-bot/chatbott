@@ -30,24 +30,24 @@ class AIService:
         # Refresh environment variables
         load_dotenv()
 
-        if config:
-            self.provider = getattr(config, 'AI_PROVIDER', os.getenv('AI_PROVIDER', 'gemini')).lower()
-            self.gemini_key = (config.GEMINI_API_KEY if hasattr(config, 'GEMINI_API_KEY') else os.getenv('GEMINI_API_KEY', '')).strip()
-            self.gemini_model = (config.GEMINI_MODEL if hasattr(config, 'GEMINI_MODEL') else os.getenv('GEMINI_MODEL', 'gemini-3.5-flash')).strip()
-            self.openai_key = (config.OPENAI_API_KEY if hasattr(config, 'OPENAI_API_KEY') else os.getenv('OPENAI_API_KEY', '')).strip()
-            self.openai_model = (config.OPENAI_MODEL if hasattr(config, 'OPENAI_MODEL') else os.getenv('OPENAI_MODEL', 'gpt-4o-mini')).strip()
-            self.groq_key = (config.GROQ_API_KEY if hasattr(config, 'GROQ_API_KEY') else os.getenv('GROQ_API_KEY', '')).strip()
-            self.groq_model = (config.GROQ_MODEL if hasattr(config, 'GROQ_MODEL') else os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile')).strip()
-            self.base_system_prompt = getattr(config, 'AI_SYSTEM_PROMPT', os.getenv('AI_SYSTEM_PROMPT', ''))
-        else:
-            self.provider = os.getenv('AI_PROVIDER', 'gemini').lower()
-            self.gemini_key = os.getenv('GEMINI_API_KEY', '').strip()
-            self.gemini_model = os.getenv('GEMINI_MODEL', 'gemini-3.5-flash').strip()
-            self.openai_key = os.getenv('OPENAI_API_KEY', '').strip()
-            self.openai_model = os.getenv('OPENAI_MODEL', 'gpt-4o-mini').strip()
-            self.groq_key = os.getenv('GROQ_API_KEY', '').strip()
-            self.groq_model = os.getenv('GROQ_MODEL', 'llama-3.3-70b-versatile').strip()
-            self.base_system_prompt = os.getenv('AI_SYSTEM_PROMPT', '')
+        def get_cfg(key: str, default: str = "") -> str:
+            if config is not None:
+                # Flask Config or dict
+                if hasattr(config, "get") and config.get(key) is not None:
+                    return str(config.get(key))
+                # Class or namespace object
+                if hasattr(config, key) and getattr(config, key) is not None:
+                    return str(getattr(config, key))
+            return os.getenv(key, default)
+
+        self.provider = get_cfg("AI_PROVIDER", "gemini").lower()
+        self.gemini_key = get_cfg("GEMINI_API_KEY", "").strip()
+        self.gemini_model = get_cfg("GEMINI_MODEL", "gemini-3.5-flash").strip()
+        self.openai_key = get_cfg("OPENAI_API_KEY", "").strip()
+        self.openai_model = get_cfg("OPENAI_MODEL", "gpt-4o-mini").strip()
+        self.groq_key = get_cfg("GROQ_API_KEY", "").strip()
+        self.groq_model = get_cfg("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+        self.base_system_prompt = get_cfg("AI_SYSTEM_PROMPT", "")
 
     def get_system_prompt(self) -> str:
         """Build dynamic system prompt with real-time date and context awareness."""

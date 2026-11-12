@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}NovaAI - Intelligent ChatGPT Assistant{% endblock %}
+
+{% block content %}
+<div class="app-layout" id="app-layout">
+    
+    <!-- ===================================================================== -->
+    <!-- LEFT SIDEBAR                                                          -->
+    <!-- ===================================================================== -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Sidebar Header: Brand & Collapse Button -->
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <div class="brand-sparkle-icon">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <span class="brand-title">NovaAI</span>
+            </div>
+            <button class="icon-btn sidebar-toggle-btn" id="sidebar-collapse-btn" title="Close Sidebar" aria-label="Toggle Sidebar">
+                <i class="fa-solid fa-bars-staggered"></i>
+            </button>
+        </div>
+
+        <!-- New Chat Button -->
+        <div class="sidebar-action-container">
+            <button class="new-chat-btn" id="new-chat-btn" title="New Chat (Ctrl+N)">
+                <i class="fa-solid fa-plus"></i>
+                <span>New Chat</span>
+                <span class="shortcut-tag">Ctrl+N</span>
+            </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="sidebar-search-container">
+            <div class="search-input-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input 
+                    type="text" 
+                    id="chat-search-input" 
+                    placeholder="Search conversations..." 
+                    autocomplete="off"
+                    aria-label="Search conversations"
+                >
+                <button class="search-clear-btn hidden" id="search-clear-btn" aria-label="Clear search">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat History List Grouped by Time -->
+        <nav class="sidebar-history-container custom-scrollbar" id="sidebar-history">
+            <!-- Loading skeleton for chat history -->
+            <div class="history-skeleton" id="history-skeleton">
+                <div class="skeleton-pill"></div>
+                <div class="skeleton-pill"></div>
+                <div class="skeleton-pill"></div>
+            </div>
+
+            <!-- Group: Today -->
+            <div class="history-group hidden" id="group-today">
+                <div class="group-title">Today</div>
+                <ul class="chat-list" id="list-today"></ul>
+            </div>
+
+            <!-- Group: Yesterday -->
+            <div class="history-group hidden" id="group-yesterday">
+                <div class="group-title">Yesterday</div>
+                <ul class="chat-list" id="list-yesterday"></ul>
+            </div>
+
+            <!-- Group: Previous 7 Days -->
+            <div class="history-group hidden" id="group-prev-7">
+                <div class="group-title">Previous 7 Days</div>
+                <ul class="chat-list" id="list-prev-7"></ul>
+            </div>
+
+            <!-- Group: Older -->
+            <div class="history-group hidden" id="group-older">
+                <div class="group-title">Older</div>
+                <ul class="chat-list" id="list-older"></ul>
+            </div>
+
+            <!-- Empty State for History -->
+            <div class="history-empty hidden" id="history-empty">
+                <i class="fa-regular fa-comments"></i>
+                <p>No conversations found</p>
+            </div>
+        </nav>
+
+        <!-- Sidebar Footer: User Profile & Dropdown -->
+        <div class="sidebar-footer">
+            <div class="user-profile-widget" id="user-profile-trigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+                <div class="user-avatar-circle">
+                    <span>{{ user.name[:2].upper() }}</span>
+                </div>
+                <div class="user-meta-info">
+                    <span class="user-display-name">{{ user.name }}</span>
+                    <span class="user-display-email">{{ user.email }}</span>
+                </div>
+                <i class="fa-solid fa-ellipsis user-menu-chevron"></i>
+            </div>
+
+            <!-- Profile Popup Menu -->
+            <div class="user-dropdown-menu hidden animate-scale-up" id="user-dropdown-menu">
+                <div class="dropdown-header">
+                    <strong>{{ user.name }}</strong>
+                    <small>{{ user.email }}</small>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a href="{{ url_for('auth.settings_page') }}" class="dropdown-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings & Profile</span>
+                </a>
+                <button type="button" class="dropdown-item" id="theme-toggle-menu-btn">
+                    <i class="fa-regular fa-moon dark-icon"></i>
+                    <i class="fa-regular fa-sun light-icon"></i>
+                    <span id="theme-toggle-label">Dark / Light Mode</span>
+                </button>
+                <div class="dropdown-divider"></div>
+                <a href="{{ url_for('auth.logout') }}" class="dropdown-item dropdown-danger">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Log out</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay backdrop for mobile drawer -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- ===================================================================== -->
+    <!-- MAIN CHAT WORKSPACE                                                   -->
+    <!-- ===================================================================== -->
+    <main class="main-content" id="main-content">
+        
+        <!-- Top Navigation Bar -->
+        <header class="top-nav-bar">
+            <div class="top-nav-left">
+                <button class="icon-btn mobile-menu-btn" id="mobile-sidebar-toggle" aria-label="Open sidebar">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="model-badge-pill" id="model-badge" title="AI Model Status">
+                    {% if not provider_info.has_key %}
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b;"></i>
+                        <span>{{ provider_info.display_name }} (Key Missing)</span>
+                    {% else %}
+                        <i class="fa-solid fa-sparkles ai-badge-icon"></i>
+                        <span>{{ provider_info.display_name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="top-nav-right">
+                <button class="icon-btn hidden" id="export-chat-btn" title="Export Chat (Markdown)">
+                    <i class="fa-solid fa-arrow-down-to-bracket"></i>
+                </button>
+                <button class="icon-btn" id="nav-new-chat-btn" title="New Chat">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                </button>
+                <button class="icon-btn" id="top-theme-btn" title="Toggle Theme">
+                    <i class="fa-regular fa-moon dark-icon"></i>
+                    <i class="fa-regular fa-sun light-icon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Chat Conversation Scroll Area -->
+        <div class="chat-viewport custom-scrollbar" id="chat-viewport">
+            
+            <!-- WELCOME SCREEN (Shown when conversation is empty) -->
+            <div class="welcome-container" id="welcome-screen">
+                <div class="welcome-sparkle-box">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <h1 class="welcome-heading">How can I help you today?</h1>
+                <p class="welcome-subtitle">Ask anything, draft code, or brainstorm ideas with intelligent AI.</p>
+
+                <!-- 4 Prompt Suggestion Cards -->
+                <div class="prompt-cards-grid">
+                    <button class="prompt-card" data-prompt="Draft a professional email proposing a project deadline extension to stakeholders.">
+                        <div class="card-icon-bubble card-blue">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Write something for me</h3>
+                            <p>Draft a professional email proposing a deadline extension</p>
+                        </div>
+                    </button>
+
+                    <button class="prompt-card" data-prompt="Explain quantum computing in simple terms for a beginner, with an intuitive analogy.">
+                        <div class="card-icon-bubble card-purple">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Explain a complex topic</h3>
+                            <p>Explain quantum computing simply with an analogy</p>
+                        </div>
+                    </button>
+
+                    <button class="prompt-card" data-prompt="Write a clean Python script to parse, sanitize, and aggregate JSON log files efficiently.">
+                        <div class="card-icon-bubble card-emerald">
+                            <i class="fa-solid fa-code"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Help me write code</h3>
+                            <p>Write a clean Python script to aggregate JSON log files</p>
+                        </div>
+                    </button>
+
+                    <button class="prompt-card" data-prompt="Brainstorm 4 innovative high-impact startup ideas for AI-powered productivity tools.">
+                        <div class="card-icon-bubble card-amber">
+                            <i class="fa-regular fa-lightbulb"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Generate creative ideas</h3>
+                            <p>Brainstorm 4 innovative startup ideas for AI tools</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MESSAGES CONTAINER -->
+            <div class="messages-container" id="messages-container"></div>
+
+            <!-- TYPING / STREAMING INDICATOR -->
+            <div class="typing-indicator-row hidden" id="typing-indicator">
+                <div class="bot-avatar-circle">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <div class="typing-bubble">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+
+            <!-- Scroll to bottom floating button -->
+            <button class="scroll-bottom-btn hidden" id="scroll-bottom-btn" title="Scroll to bottom" aria-label="Scroll to bottom">
+                <i class="fa-solid fa-chevron-down"></i>
+            </button>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- BOTTOM MESSAGE INPUT CONTAINER                                    -->
+        <!-- ================================================================= -->
+        <footer class="input-panel">
+            <div class="input-container">
+                <form id="chat-form" class="chat-form">
+                    <div class="input-box-wrapper">
+                        <textarea 
+                            id="message-input" 
+                            class="message-textarea" 
+                            placeholder="Message NovaAI..." 
+                            rows="1" 
+                            required
+                        ></textarea>
+                        
+                        <div class="input-actions-group">
+                            <button type="submit" id="send-btn" class="send-btn" disabled title="Send message">
+                                <i class="fa-solid fa-arrow-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="chat-disclaimer">
+                    <span>NovaAI can make mistakes. Verify important information.</span>
+                </div>
+            </div>
+        </footer>
+    </main>
+</div>
+
+<!-- ========================================================================= -->
+<!-- DELETE CONVERSATION CONFIRMATION MODAL                                    -->
+<!-- ========================================================================= -->
+<div class="modal-backdrop hidden" id="delete-modal">
+    <div class="modal-card animate-scale-up">
+        <div class="modal-header">
+            <div class="modal-icon-danger">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <div>
+                <h3 class="modal-title">Delete conversation?</h3>
+                <p class="modal-subtitle">This will permanently delete this conversation and all its messages.</p>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+            <button type="button" class="btn-danger" id="modal-confirm-delete-btn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Current user context metadata for JS -->
+<script>
+    window.CURRENT_USER = {
+        id: {{ user.id }},
+        name: "{{ user.name|e }}",
+        email: "{{ user.email|e }}"
+    };
+    window.ACTIVE_PROVIDER = {{ provider_info|tojson }};
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}
+

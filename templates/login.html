@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Log in - NovaAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block body_class %}auth-body{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-header-bar">
+        <div class="auth-logo">
+            <div class="logo-icon-bubble">
+                <i class="fa-solid fa-sparkles"></i>
+            </div>
+            <span class="logo-name">NovaAI</span>
+        </div>
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Dark/Light Mode">
+            <i class="fa-regular fa-moon dark-icon"></i>
+            <i class="fa-regular fa-sun light-icon"></i>
+        </button>
+    </div>
+
+    <main class="auth-container animate-fade-in">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <h1 class="auth-title">Welcome back</h1>
+                <p class="auth-subtitle">Sign in to your NovaAI workspace to continue</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" class="auth-form" novalidate>
+                <div class="form-group">
+                    <label for="email" class="form-label">Email address</label>
+                    <div class="input-wrapper">
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            value="{{ email or '' }}" 
+                            class="form-input" 
+                            placeholder="name@example.com" 
+                            required 
+                            autofocus 
+                            autocomplete="email"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label for="password" class="form-label">Password</label>
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="form-input" 
+                            placeholder="Enter your password" 
+                            required 
+                            autocomplete="current-password"
+                        >
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password', this)" aria-label="Show password">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-row-remember">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember" class="custom-checkbox" checked>
+                        <span>Remember me for 7 days</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="auth-submit-btn">
+                    <span>Continue</span>
+                    <i class="fa-solid fa-arrow-right-long"></i>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="{{ url_for('auth.signup') }}" class="auth-link">Sign up</a></p>
+            </div>
+        </div>
+
+        <div class="auth-disclaimer">
+            <span>By continuing, you agree to NovaAI's Terms of Service and Privacy Policy.</span>
+        </div>
+    </main>
+</div>
+
+<script>
+    function togglePasswordVisibility(fieldId, btn) {
+        const input = document.getElementById(fieldId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %}
+

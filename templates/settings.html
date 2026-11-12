@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - NovaAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<style>
+    .settings-layout {
+        max-width: 860px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+    }
+    .settings-nav-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-md);
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid var(--border-color);
+    }
+    .back-btn:hover {
+        background: var(--bg-hover);
+        border-color: var(--border-hover);
+    }
+    .settings-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+    }
+    .settings-section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .settings-section-desc {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+    .danger-zone {
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+    .danger-zone .settings-section-title {
+        color: #ef4444;
+    }
+    .btn-danger {
+        background: #ef4444;
+        color: #ffffff;
+        border: none;
+        padding: 0.65rem 1.25rem;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: opacity 0.2s;
+    }
+    .btn-danger:hover {
+        opacity: 0.9;
+    }
+    .badge-info {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(16, 163, 127, 0.15);
+        color: var(--primary-accent);
+        border: 1px solid rgba(16, 163, 127, 0.3);
+    }
+    .badge-demo {
+        background: rgba(234, 179, 8, 0.15);
+        color: #eab308;
+        border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+    .status-box {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin-top: 1rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block body_class %}settings-body{% endblock %}
+
+{% block content %}
+<div class="settings-layout">
+    <div class="settings-nav-bar">
+        <a href="{{ url_for('chat.index') }}" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back to Chat</span>
+        </a>
+        <div class="auth-logo" style="margin: 0;">
+            <div class="logo-icon-bubble">
+                <i class="fa-solid fa-sparkles"></i>
+            </div>
+            <span class="logo-name">NovaAI Settings</span>
+        </div>
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle Theme">
+            <i class="fa-regular fa-moon dark-icon"></i>
+            <i class="fa-regular fa-sun light-icon"></i>
+        </button>
+    </div>
+
+    <!-- Profile Settings Card -->
+    <div class="settings-card">
+        <h2 class="settings-section-title">
+            <i class="fa-regular fa-user"></i>
+            <span>User Profile</span>
+        </h2>
+        <p class="settings-section-desc">Manage your account credentials and personal preferences.</p>
+
+        <form id="profile-form" onsubmit="handleProfileUpdate(event)">
+            <div class="form-group">
+                <label for="name" class="form-label">Full Name</label>
+                <div class="input-wrapper">
+                    <i class="fa-regular fa-user input-icon"></i>
+                    <input type="text" id="name" name="name" class="form-input" value="{{ user.name }}" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-wrapper">
+                    <i class="fa-regular fa-envelope input-icon"></i>
+                    <input type="email" id="email" name="email" class="form-input" value="{{ user.email }}" required>
+                </div>
+            </div>
+
+            <button type="submit" class="auth-submit-btn" style="max-width: 200px; margin-top: 1rem;">
+                <span id="profile-btn-text">Save Changes</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Password Card -->
+    <div class="settings-card">
+        <h2 class="settings-section-title">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Security & Password</span>
+        </h2>
+        <p class="settings-section-desc">Change your password to keep your account safe.</p>
+
+        <form id="password-form" onsubmit="handlePasswordUpdate(event)">
+            <div class="form-group">
+                <label for="current_password" class="form-label">Current Password</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" id="current_password" name="current_password" class="form-input" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="new_password" class="form-label">New Password</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-key input-icon"></i>
+                    <input type="password" id="new_password" name="new_password" class="form-input" placeholder="At least 6 characters" required>
+                </div>
+            </div>
+
+            <button type="submit" class="auth-submit-btn" style="max-width: 200px; margin-top: 1rem;">
+                <span id="pwd-btn-text">Update Password</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- AI Model Information Card -->
+    <div class="settings-card">
+        <h2 class="settings-section-title">
+            <i class="fa-solid fa-microchip"></i>
+            <span>AI Provider Configuration</span>
+        </h2>
+        <p class="settings-section-desc">View the configured AI provider, model, and connectivity status.</p>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <div>
+                <strong>Active Mode:</strong>
+                <span class="badge-info {% if config.AI_PROVIDER == 'demo' and not config.OPENAI_API_KEY and not config.GROQ_API_KEY %}badge-demo{% endif %}">
+                    <i class="fa-solid fa-circle-dot"></i>
+                    {{ config.AI_PROVIDER.upper() }}
+                </span>
+            </div>
+            <div>
+                <small style="color: var(--text-tertiary);">Configured via <code>.env</code></small>
+            </div>
+        </div>
+
+        <div class="status-box">
+            <p><strong>Configuring Real AI Models:</strong></p>
+            <p>To connect OpenAI, Groq, or Google Gemini, edit the <code>.env</code> file in the application root directory:</p>
+            <ul style="margin: 0.5rem 0 0 1.25rem;">
+                <li><code>OPENAI_API_KEY=sk-proj-...</code> (OpenAI GPT-4o / GPT-4o-mini)</li>
+                <li><code>GROQ_API_KEY=gsk_...</code> (Ultra-fast Llama-3.3-70b-versatile)</li>
+                <li><code>GEMINI_API_KEY=AIzaSy...</code> (Google Gemini 1.5 Flash)</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Danger Zone Card -->
+    <div class="settings-card danger-zone">
+        <h2 class="settings-section-title">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Danger Zone</span>
+        </h2>
+        <p class="settings-section-desc">Permanently delete your conversation history and messages.</p>
+
+        <button type="button" class="btn-danger" onclick="confirmClearAllHistory()">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Clear All Conversations</span>
+        </button>
+    </div>
+</div>
+
+<script>
+    async function handleProfileUpdate(e) {
+        e.preventDefault();
+        const btnText = document.getElementById('profile-btn-text');
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+
+        btnText.textContent = 'Saving...';
+
+        try {
+            const res = await fetch('/api/user/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message || 'Profile saved!', 'success');
+            } else {
+                showToast(data.error || 'Failed to update profile.', 'error');
+            }
+        } catch (err) {
+            showToast('Network error while saving profile.', 'error');
+        } finally {
+            btnText.textContent = 'Save Changes';
+        }
+    }
+
+    async function handlePasswordUpdate(e) {
+        e.preventDefault();
+        const btnText = document.getElementById('pwd-btn-text');
+        const current_password = document.getElementById('current_password').value;
+        const new_password = document.getElementById('new_password').value;
+
+        btnText.textContent = 'Updating...';
+
+        try {
+            const res = await fetch('/api/user/password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ current_password, new_password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message || 'Password updated!', 'success');
+                document.getElementById('password-form').reset();
+            } else {
+                showToast(data.error || 'Failed to update password.', 'error');
+            }
+        } catch (err) {
+            showToast('Network error while updating password.', 'error');
+        } finally {
+            btnText.textContent = 'Update Password';
+        }
+    }
+
+    async function confirmClearAllHistory() {
+        if (!confirm('Are you absolutely sure you want to delete ALL your conversations? This cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/conversations/clear-all', {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast('All chat history cleared successfully.', 'success');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1200);
+            } else {
+                showToast(data.error || 'Failed to clear conversations.', 'error');
+            }
+        } catch (err) {
+            showToast('Network error.', 'error');
+        }
+    }
+
+    function showToast(msg, category) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${category} animate-slide-in`;
+        toast.innerHTML = `
+            <i class="fa-solid ${category === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'} toast-icon"></i>
+            <span class="toast-text">${msg}</span>
+            <button type="button" class="toast-close" onclick="this.parentElement.remove()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+</script>
+{% endblock %}
+
